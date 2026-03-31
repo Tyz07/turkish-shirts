@@ -1,0 +1,142 @@
+* { box-sizing: border-box }
+
+/* Basis */
+html, body { margin: 0; padding: 0 }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;       /* wit */
+  color: #0c1116;            /* donkere tekst */
+}
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px }
+
+/* Header */
+.hdr {
+  position: sticky; top: 0;
+  backdrop-filter: saturate(180%) blur(8px);
+  background: rgba(255,255,255,.85);  /* licht/transparant */
+  border-bottom: 1px solid #e5e7eb;   /* lichtgrijs */
+  z-index: 10;
+}
+.hdr .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+}
+.logo { font-weight: 800; color: #0c1116; text-decoration: none; letter-spacing: .3px }
+nav a { color: #334155; text-decoration: none; margin-left: 16px }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #ecfdf5 0%, #fff7ed 60%); /* groen→oranje heel licht */
+  border-bottom: 1px solid #e5e7eb;
+}
+.hero .wrap { padding: 38px 0 }
+.hero h1 { margin: 0 0 6px 0; font-size: 32px; color: #0c1116 }
+.hero p  { margin: 0; color: #475569 }
+
+/* Grid & Cards */
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px; margin: 22px 0;
+}
+.card {
+  background: #ffffff;                 /* wit */
+  border: 1px solid #e5e7eb;           /* lichtgrijs */
+  border-radius: 14px; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.card img { width: 100%; height: 180px; object-fit: cover }
+.card .p { padding: 14px }
+
+.badge {
+  display: inline-block; padding: 4px 8px;
+  border: 1px solid #86efac;          /* lichtgroen rand */
+  background: #f0fdf4;                 /* lichtgroene bg */
+  border-radius: 999px; font-size: 12px; color: #166534; /* donkergroen tekst */
+}
+
+.price { font-weight: 800; margin: 8px 0; color: #0c1116 }
+
+/* Layout helpers */
+.row { display: flex; gap: 8px; flex-wrap: wrap }
+
+/* Inputs & Selects */
+.input, select {
+  background: #ffffff;
+  border: 1px solid #d1d5db;           /* grijs */
+  color: #0c1116;
+  border-radius: 10px; padding: 10px; width: 100%;
+}
+.input:focus, select:focus {
+  outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+}
+
+/* Buttons */
+.btn {
+  background: #22c55e;        /* primary groen */
+  border: none; color: #ffffff;
+  border-radius: 10px; padding: 10px 14px; cursor: pointer;
+}
+.btn:hover { filter: brightness(0.95) }
+
+.btn.alt {
+  background: #f97316;        /* oranje accent */
+  color: #ffffff;
+}
+
+/* Tabellen */
+.table { width: 100%; border-collapse: collapse }
+th, td {
+  padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; color: #0c1116;
+}
+th { background: #f8fafc; }  /* lichte header */
+
+/* Boxen */
+.box {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px; padding: 16px; margin: 18px 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+/* Totaal */
+.total { text-align: right; font-weight: 800; color: #0c1116 }
+
+/* Footer */
+.ftr { border-top: 1px solid #e5e7eb; margin-top: 30px; color: #64748b }
+.ftr .wrap { padding: 16px 0 }
+
+/* Koppen */
+h2 { margin: 10px 0 6px; color: #0c1116 }
+
+/* Club info zijpaneel */
+.club-panel {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  bottom: 16px;
+  width: min(360px, 90vw);
+  z-index: 20;
+}
+.club-panel__inner {
+  background: #ffffff;
+  color: #0c1116;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  height: 100%;
+  padding: 16px;
+  overflow: auto;
+}
+.club-panel__close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  float: right;
+  cursor: pointer;
+}
+@media (max-width: 900px) {
+  .club-panel { position: fixed; top: auto; bottom: 0; right: 0; left: 0; width: 100%; }
+}
