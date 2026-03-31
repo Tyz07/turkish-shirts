@@ -79,3 +79,4 @@ function saveOrder(mysqli $conn, array $customerData, array $orderData): bool
     $_SESSION["cart"] = [];
     return true;
 }
+S
