@@ -43,7 +43,7 @@ function saveOrder(mysqli $conn, array $customerData, array $orderData): bool
     ");
 
     $stmt->bind_param(
-        "sssssssd",
+        
         $customerData["first_name"],
         $customerData["last_name"],
         $customerData["email"],

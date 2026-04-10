@@ -62,7 +62,13 @@ try {
         <div class="badge"><?php echo htmlspecialchars($p["club"]); ?></div>
         <h3 style="margin:8px 0 4px"><?php echo htmlspecialchars($p["name"]); ?></h3>
         <div class="price">
-          €<?php echo number_format($p["price"], 2, ",", "."); ?>
+         <?php
+if ($currency == "TRY") {
+    echo number_format($p["price"] * $rate, 2, ",", ".") . " ₺";
+} else {
+    echo number_format($p["price"], 2, ",", ".") . " €";
+}
+?>
         </div>
 
         <form method="post" action="?page=cart">

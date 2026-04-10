@@ -2,6 +2,17 @@
 require __DIR__ . "/config.php";   // site/db instellingen
 require __DIR__ . "/lib/db.php";   // database connectie
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+};
+
+if (isset($_GET['currency'])) {
+    $_SESSION['currency'] = $_GET['currency'];
+}
+
+$currency = $_SESSION['currency'] ?? 'EUR';
+$rate =52; // wisselkoers
+
 
 $p = $_GET["page"] ?? "home";      // kies pagina uit URL of 'home'
 $pages = ["home", "cart", "checkout", "login", "logout", "admin"]; // toegestane views
@@ -17,9 +28,15 @@ if (!in_array($p, $pages)) {       // voorkom vreemde includes
     <meta name="viewport" content="width=device-width,initial-scale=1"> <!-- responsive -->
     <title>Voetbalshop TR</title> <!-- paginatitel -->
     <link rel="stylesheet" href="assets/css/style.css"> <!-- styles -->
+
+   <div class="currency-switch">
+<a href="?page=<?php echo $_GET['page'] ?? 'home'; ?>&currency=EUR">€</a>
+<a href="?page=<?php echo $_GET['page'] ?? 'home'; ?>&currency=TRY">₺</a>
+</div>
 </head>
 
 <body>
+
     <header class="hdr">
         <div class="wrap">
             <a class="logo" href="?page=home">Voetbalshop</a> <!-- naar home -->

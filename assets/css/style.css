@@ -140,3 +140,22 @@ h2 { margin: 10px 0 6px; color: #0c1116 }
 @media (max-width: 900px) {
   .club-panel { position: fixed; top: auto; bottom: 0; right: 0; left: 0; width: 100%; }
 }
+.currency-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.currency-switch a {
+    text-decoration: none;
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    color: black;
+    font-weight: bold;
+}
+
+.currency-switch a:hover {
+    background-color: #f2f2f2;
+}
