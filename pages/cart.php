@@ -1,88 +1,170 @@
 <?php
-require_once __DIR__ . "/../lib/cart_functions.php";
+// Koppel het bestand met de bestelfuncties
+require_once __DIR__ . "/../lib/order_functions.php";
 
-initializeCart();
+// Zorg dat er een winkelmandje bestaat
+$_SESSION["cart"] = $_SESSION["cart"] ?? [];
+$success = false;
+$orderResult = null; 
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+$discount = 0;
+$error = "";
+$code = "";
+
+// Controleer of de klant een kortingscode heeft ingevuld
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $code = strtoupper(trim($_POST["discount_code"] ?? ""));
+
+    if ($code !== "") {
+        // Kijk of de code klopt en bepaal de juiste korting
+        if ($code === "KORTING10") {
+            $discount = 0.10;
+        } elseif ($code === "KORTING20") {
+            $discount = 0.20;
+        } else {
+            $error = "❌ Ongeldige kortingscode";
+            $discount = 0;
+        }
+        $_SESSION["discount"] = $discount;
+    }
 }
 
-$currency = $_SESSION['currency'] ?? 'EUR';
-$rate = 35;
+// Haal de bewaarde korting op uit de sessie
+$discount = $_SESSION["discount"] ?? 0;
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "add") {
-  addToCart();
+try {
+    // Haal de producten en het totaalbedrag op uit de database
+    $orderData = buildOrderItems($conn);
+
+    // Bereken het nieuwe totaalbedrag met de korting eraf
+    $originalTotal = $orderData["total"];
+    $discountAmount = $originalTotal * $discount;
+    $newTotal = $originalTotal - $discountAmount;
+
+    // Als de klant op 'Bestellen' heeft geklikt
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+        // Verzamel alle verplichte klantgegevens in een lijstje
+        $customerData = [
+            "first_name" => trim($_POST["first_name"] ?? ""),
+            "last_name" => trim($_POST["last_name"] ?? ""),
+            "email" => trim($_POST["email"] ?? ""),
+            "address" => trim($_POST["address"] ?? ""),
+            "postal_code" => trim($_POST["postal_code"] ?? ""),
+            "city" => trim($_POST["city"] ?? ""),
+            "country" => trim($_POST["country"] ?? "")
+        ];
+
+        // We controleren even of het formulier echt is ingevuld (voornaam is aanwezig)
+        if (isset($_POST["first_name"])) {
+            
+            // Controleer of er geen verplichte velden leeg zijn gelaten
+            if (!in_array("", $customerData, true)) {
+                
+                // Voeg de optionele kortingsgegevens toe aan de klantgegevens
+                $customerData["discount_code"] = $code;
+                $customerData["discount_percent"] = $discount;
+
+                // Geef het definitieve (eventueel afgeprijsde) totaalbedrag mee
+                $orderData["total"] = $newTotal;
+
+                // Sla de bestelling op in de database
+                $orderResult = saveOrder($conn, $customerData, $orderData);
+                $success = $orderResult["success"] ?? false;
+
+                // Verwijder de actieve korting voor de volgende keer
+                unset($_SESSION["discount"]);
+            } else {
+                $error = "❌ Vul a.u.b. alle verplichte velden in.";
+            }
+        }
+    }
+
+} catch (Throwable $e) {
+    // Stop de pagina en laat een foutmelding zien als de database vastloopt
+    die("<strong>Systeemfout:</strong> " . $e->getMessage());
 }
-
-if (isset($_POST["update"])) {
-  updateCart();
-}
-
-$data = getCartItems($conn);
-$items = $data["items"];
-$total = $data["total"];
 ?>
 
-<div class="box">
-  <h2>Winkelmand</h2>
-  <?php if (!$items): ?>
-    <p>Leeg</p>
-  <?php else: ?>
-    <form method="post"> <!-- bijwerken van aantallen -->
-      <table class="table">
-        <tr>
-          <th>Product</th>
-          <th>Maat / Naam</th>
-          <th>Prijs</th>
-          <th>Aantal</th>
-          <th>Subtotaal</th>
-        </tr>
-        <?php foreach ($items as $it): ?>
-          <tr>
-            <td><?php echo htmlspecialchars($it["name"]); ?></td>
-            <td>
-              <?php echo htmlspecialchars($it["size"]); ?>    <?php if (!empty($it["custom_name"]))
-                       echo " — " . htmlspecialchars($it["custom_name"]); ?>
-            </td>
-           <td>
-<?php
-if ($currency == "TRY") {
-    echo number_format($it["price"] * $rate, 2, ",", ".") . " ₺";
-} else {
-    echo number_format($it["price"], 2, ",", ".") . " €";
-}
-?>
-</td>
-            <td>
-              <input class="input" style="max-width:90px" type="number"
-                name="items[<?php echo htmlspecialchars($it["key"]); ?>]" value="<?php echo $it["qty"]; ?>">
-            </td>
-            <td>
-<?php
-if ($currency == "TRY") {
-    echo number_format($it["subtotal"] * $rate, 2, ",", ".") . " ₺";
-} else {
-    echo number_format($it["subtotal"], 2, ",", ".") . " €";
-}
-?>
-</td>
-          </tr>
-        <?php endforeach; ?>
-      </table>
-   <div class="total">
+<?php if ($success): ?>
+    <div class="box">
+        <h2>🎉 Bestelling geplaatst!</h2>
+        <p>Bedankt voor je bestelling, <strong><?php echo htmlspecialchars($customerData["first_name"]); ?></strong>.</p>
+        <p>Je ordernummer is: <strong><?php echo $orderResult["order_number"]; ?></strong></p>
+        
+        <hr>
+        
+        <h3>Overzicht van je bestelling:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="border-bottom: 1px solid #ddd; text-align: left;">
+                    <th>Product</th>
+                    <th>Aantal</th>
+                    <th>Prijs</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($orderData["items"] as $item): ?>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px 0;"><?php echo htmlspecialchars($item["name"]); ?> (Maat: M)</td>
+                        <td><?php echo $item["quantity"]; ?>x</td>
+                        <td>€<?php echo number_format($item["total"], 2, ",", "."); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-<?php
-if ($currency == "TRY") {
-    echo number_format($total * $rate, 2, ",", ".") . " ₺";
-} else {
-    echo number_format($total, 2, ",", ".") . " €";
-}
-?>
-</div>
-      <div class="row">
-        <button class="btn" name="update" value="1">Bijwerken</button>
-        <a class="btn" href="?page=checkout">Afrekenen</a>
-      </div>
-    </form>
-  <?php endif; ?>
-</div>
+        <div style="text-align: right; font-size: 1.2em;">
+            <strong>Totaal betaald: €<?php echo number_format($orderData["total"], 2, ",", "."); ?></strong>
+        </div>
+
+        <br>
+        <a class="btn" href="?page=home">Verder winkelen</a>
+    </div>
+<?php else: ?>
+    <div class="box">
+        <h2>Afrekenen</h2>
+
+        <?php if ($error): ?>
+            <p style="color:red;"><?php echo $error; ?></p>
+        <?php endif; ?>
+
+        <form method="post">
+            <div class="row">
+                <input class="input" name="first_name" placeholder="Voornaam" required>
+                <input class="input" name="last_name" placeholder="Achternaam" required>
+            </div>
+
+            <div class="row">
+                <input class="input" type="email" name="email" placeholder="E-mail" required>
+            </div>
+
+            <div class="row">
+                <input class="input" name="address" placeholder="Adres" required>
+                <input class="input" name="postal_code" placeholder="Postcode" required>
+            </div>
+
+            <div class="row">
+                <input class="input" name="city" placeholder="Stad" required>
+                <input class="input" name="country" placeholder="Land" required>
+            </div>
+
+            <div class="row">
+                <input class="input" name="discount_code" placeholder="Kortingscode" value="<?php echo htmlspecialchars($code); ?>">
+            </div>
+
+            <div class="total">
+                <?php if ($discount > 0): ?>
+                    <p>Origineel: €<?php echo number_format($originalTotal, 2, ",", "."); ?></p>
+                    <p>Korting: -€<?php echo number_format($discountAmount, 2, ",", "."); ?></p>
+                <?php endif; ?>
+
+                <strong>
+                    Totaal: €<?php echo number_format($newTotal, 2, ",", "."); ?>
+                </strong>
+            </div>
+
+            <button class="btn" type="submit">Bestellen</button>
+        </form>
+    </div>
+<?php endif; ?>

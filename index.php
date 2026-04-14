@@ -53,7 +53,7 @@ if (!in_array($p, $pages)) {
 </header>
 
 <section class="hero">
-    <div class="wrap">
+    <div class="wrap"> <!-- dit is waarmee de klanten worden begroet -->
         <h1>Turkse Clubshirts</h1>
         <p>Selecteer je club en maat – S t/m XXL op voorraad.</p>
     </div>
@@ -64,7 +64,7 @@ if (!in_array($p, $pages)) {
 </main>
 
 <footer class="ftr">
-    <div class="wrap">© Voetbalshop</div>
+    <div class="wrap">© Voetbalshop</div><!-- footer wat onder de site van elke pagina blijft -->
 </footer>
 
 <script src="assets/script.js"></script>

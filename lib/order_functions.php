@@ -6,16 +6,19 @@ function buildOrderItems($conn) {
     $items = [];
     $total = 0;
 
+    // Loop door elk product in het winkelmandje
     foreach ($cart as $productId => $quantity) {
+        // Haal de gegevens van dit product uit de database
         $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
         $stmt->execute([$productId]);
         
         $result = $stmt->get_result();
         $product = $result->fetch_assoc();
-
+// Als het product echt in de database staat:
         if ($product) {
-            $itemTotal = $product["price"] * $quantity;
-
+            // Bereken de prijs voor dit product (prijs keer het aantal stuks)
+        $itemTotal = $product["price"] * $quantity;
+// Voeg alle gegevens toe aan de definitieve bestellijst
             $items[] = [
                 "id" => $product["id"],
                 "name" => $product["name"],
@@ -64,7 +67,7 @@ function saveOrder($conn, $customerData, $orderData) {
     // De correcte MySQLi manier om het laatste ID op te halen
     $orderId = $conn->insert_id;
 
-    // 🔥 producten opslaan (aangepast aan jouw database structuur!)
+    //  producten opslaan (aangepast aan jouw database structuur)
     foreach ($orderData["items"] as $item) {
         $stmt = $conn->prepare("
             INSERT INTO order_items (order_id, product_id, quantity, unit_price, size)
@@ -75,8 +78,8 @@ function saveOrder($conn, $customerData, $orderData) {
             $orderId,
             $item["id"],          // Koppelt het product ID in plaats van de naam
             $item["quantity"],    // Het aantal
-            $item["price"],       // De prijs (in de DB opgeslagen als unit_price)
-            'M'                   // Hardcoded 'M' omdat je winkelwagen nog geen maten heeft
+            $item["price"],       // De prijs 
+            'M'                   // Hardcoded 'M' omdat je de maat niet kan aanpassen in winkel wagen
         ]);
     }
 

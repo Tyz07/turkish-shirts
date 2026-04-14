@@ -1,19 +1,22 @@
 <?php
+// Koppel het bestand met de bestelfuncties
 require_once __DIR__ . "/../lib/order_functions.php";
 
+// Zorg dat het winkelmandje klaarstaat
 $_SESSION["cart"] = $_SESSION["cart"] ?? [];
 $success = false;
-$orderResult = null; // Hier slaan we de details van de nieuwe bestelling in op
+$orderResult = null; // Hier slaan we straks het ordernummer in op
 
 $discount = 0;
 $error = "";
 $code = "";
 
-// kortingscode verwerken
+// Controleer of de klant een kortingscode probeert te gebruiken
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $code = strtoupper(trim($_POST["discount_code"] ?? ""));
 
     if ($code !== "") {
+        // Kijk of de code geldig is en bepaal hoeveel korting erbij hoort
         if ($code === "KORTING10") {
             $discount = 0.10;
         } elseif ($code === "KORTING20") {
@@ -22,23 +25,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "❌ Ongeldige kortingscode";
             $discount = 0;
         }
+        // Bewaar de korting in de sessie
         $_SESSION["discount"] = $discount;
     }
 }
 
-// korting ophalen
+// Haal de bewaarde korting weer op
 $discount = $_SESSION["discount"] ?? 0;
 
 try {
+    // Haal alle producten uit het mandje en bereken de prijs
     $orderData = buildOrderItems($conn);
 
-    // totaal berekenen met korting
+    // Reken uit hoeveel er van de prijs af gaat door de korting
     $originalTotal = $orderData["total"];
     $discountAmount = $originalTotal * $discount;
     $newTotal = $originalTotal - $discountAmount;
 
+    // Als de klant het bestelformulier verstuurt
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+        // Verzamel alle verplichte adresgegevens van de klant
         $customerData = [
             "first_name" => trim($_POST["first_name"] ?? ""),
             "last_name" => trim($_POST["last_name"] ?? ""),
@@ -49,18 +56,24 @@ try {
             "country" => trim($_POST["country"] ?? "")
         ];
 
+        // Kijk of het formulier echt is ingevuld (voornaam is aanwezig)
         if (isset($_POST["first_name"])) {
+            
+            // Controleer of er geen verplichte vakjes leeg zijn gelaten
             if (!in_array("", $customerData, true)) {
                 
+                // Voeg de kortingsgegevens toe aan de klantgegevens
                 $customerData["discount_code"] = $code;
                 $customerData["discount_percent"] = $discount;
 
+                // Geef het definitieve bedrag (met korting) mee aan de bestelling
                 $orderData["total"] = $newTotal;
 
-                // We slaan de resultaten (order_id, order_number) op in $orderResult
+                // Sla de hele bestelling op in de database
                 $orderResult = saveOrder($conn, $customerData, $orderData);
                 $success = $orderResult["success"] ?? false;
 
+                // Reset de korting voor een volgende klant
                 unset($_SESSION["discount"]);
             } else {
                 $error = "❌ Vul a.u.b. alle verplichte velden in.";
@@ -69,6 +82,7 @@ try {
     }
 
 } catch (Throwable $e) {
+    // Vang database-fouten op en toon een melding zodat het systeem niet crasht
     die("<strong>Systeemfout:</strong> " . $e->getMessage());
 }
 ?>
@@ -108,6 +122,7 @@ try {
         <br>
         <a class="btn" href="?page=home">Verder winkelen</a>
     </div>
+
 <?php else: ?>
     <div class="box">
         <h2>Afrekenen</h2>
