@@ -2,70 +2,71 @@
 require __DIR__ . "/config.php";   // site/db instellingen
 require __DIR__ . "/lib/db.php";   // database connectie
 
+// Start session (maar 1x!)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-};
+}
 
+// Currency switch opslaan
 if (isset($_GET['currency'])) {
     $_SESSION['currency'] = $_GET['currency'];
 }
 
 $currency = $_SESSION['currency'] ?? 'EUR';
-$rate =52; // wisselkoers
+$rate = 52; // wisselkoers
 
+// Pagina bepalen
+$p = $_GET["page"] ?? "home";
+$pages = ["home", "cart", "checkout",];
 
-$p = $_GET["page"] ?? "home";      // kies pagina uit URL of 'home'
-$pages = ["home", "cart", "checkout", "login", "logout", "admin"]; // toegestane views
-if (!in_array($p, $pages)) {       // voorkom vreemde includes
+if (!in_array($p, $pages)) {
     $p = "home";
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="nl">
-
 <head>
-    <meta charset="UTF-8"> <!-- correcte tekens -->
-    <meta name="viewport" content="width=device-width,initial-scale=1"> <!-- responsive -->
-    <title>Voetbalshop TR</title> <!-- paginatitel -->
-    <link rel="stylesheet" href="assets/css/style.css"> <!-- styles -->
-
-   <div class="currency-switch">
-<a href="?page=<?php echo $_GET['page'] ?? 'home'; ?>&currency=EUR">€</a>
-<a href="?page=<?php echo $_GET['page'] ?? 'home'; ?>&currency=TRY">₺</a>
-</div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Voetbalshop TR</title>
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
 
-    <header class="hdr">
-        <div class="wrap">
-            <a class="logo" href="?page=home">Voetbalshop</a> <!-- naar home -->
-            <nav>
-                <a href="?page=home">Producten</a>
-                <a href="?page=cart">Winkelmand</a>
-                <?php
+<header class="hdr">
+    <div class="wrap">
+        <a class="logo" href="?page=home">Voetbalshop</a>
 
-                ?>
-            </nav>
+        <!-- Currency switch (nu op juiste plek) -->
+        <div class="currency-switch">
+            <a href="?page=<?php echo $p; ?>&currency=EUR">€</a>
+            <a href="?page=<?php echo $p; ?>&currency=TRY">₺</a>
         </div>
-    </header>
 
-    <section class="hero"> <!-- korte intro/banner -->
-        <div class="wrap">
-            <h1>Turkse Clubshirts</h1>
-            <p>Selecteer je club en maat – S t/m XXL op voorraad.</p>
-        </div>
-    </section>
+        <nav>
+            <a href="?page=home">Producten</a>
+            <a href="?page=cart">Winkelmand</a>
+        </nav>
+    </div>
+</header>
 
-    <main class="wrap">
-        <?php include __DIR__ . "/pages/" . $p . ".php"; // laad de gekozen view ?>
-    </main>
+<section class="hero">
+    <div class="wrap">
+        <h1>Turkse Clubshirts</h1>
+        <p>Selecteer je club en maat – S t/m XXL op voorraad.</p>
+    </div>
+</section>
 
-    <footer class="ftr">
-        <div class="wrap">© Voetbalshop</div> <!-- footer -->
-    </footer>
+<main class="wrap">
+    <?php include __DIR__ . "/pages/" . $p . ".php"; ?>
+</main>
 
-    <script src="assets/script.js"></script> <!-- scripts -->
+<footer class="ftr">
+    <div class="wrap">© Voetbalshop</div>
+</footer>
+
+<script src="assets/script.js"></script>
 </body>
-
 </html>
